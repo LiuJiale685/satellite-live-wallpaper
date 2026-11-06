@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# 运行产物
+pic/
+log/
+.screenshots/
+.tmp/
+
+# 系统
+Thumbs.db
+Desktop.ini

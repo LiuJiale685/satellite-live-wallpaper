@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>卫星壁纸 · 设置面板</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+  background: radial-gradient(ellipse at top, #101a3a 0%, #050a1c 60%, #02040d 100%);
+  color: #dbe4ff;
+  min-height: 100vh;
+  padding: 28px 16px 60px;
+}
+.wrap { max-width: 860px; margin: 0 auto; }
+h1 {
+  text-align: center;
+  font-size: 26px;
+  letter-spacing: 3px;
+  color: #cfe0ff;
+  text-shadow: 0 0 18px rgba(96,150,255,.6);
+  margin-bottom: 4px;
+}
+.sub {
+  text-align: center;
+  color: #7f93c4;
+  font-size: 13px;
+  margin-bottom: 28px;
+}
+.card {
+  background: rgba(20, 32, 68, .55);
+  border: 1px solid rgba(120, 160, 255, .18);
+  border-radius: 14px;
+  padding: 20px 22px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(4px);
+}
+.card h2 {
+  font-size: 15px;
+  color: #8fb0ff;
+  margin-bottom: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+/* 地球尺寸三段按钮 */
+.seg { display: inline-flex; border: 1px solid rgba(120,160,255,.3); border-radius: 10px; overflow: hidden; }
+.seg button {
+  background: transparent; border: none; color: #a9bde6;
+  padding: 8px 22px; font-size: 14px; cursor: pointer;
+  transition: all .15s; font-family: inherit;
+}
+.seg button + button { border-left: 1px solid rgba(120,160,255,.25); }
+.seg button:hover { color: #fff; background: rgba(120,160,255,.1); }
+.seg button.on { background: #3d63d8; color: #fff; box-shadow: 0 0 12px rgba(90,140,255,.5); }
+
+/* 背景图网格 */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
+.bg-item {
+  position: relative; border-radius: 10px; overflow: hidden; cursor: pointer;
+  border: 2px solid transparent; transition: border-color .15s, transform .15s; background: #0a1230;
+}
+.bg-item:hover { transform: translateY(-2px); border-color: rgba(140,180,255,.4); }
+.bg-item.on { border-color: #4d7bff; box-shadow: 0 0 14px rgba(80,130,255,.55); }
+.bg-item img { width: 100%; height: 84px; object-fit: cover; display: block; }
+.bg-item .name {
+  position: absolute; inset: auto 0 0 0; padding: 2px 6px 4px;
+  font-size: 11px; color: #fff; background: linear-gradient(transparent, rgba(0,0,0,.72));
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.bg-item.sel .tick {
+  position: absolute; top: 6px; right: 6px; width: 18px; height: 18px; border-radius: 50%;
+  background: #4d7bff; color: #fff; font-size: 12px; line-height: 18px; text-align: center;
+}
+.bg-item .fail { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #ff7b7b; }
+.empty { color: #7288b8; font-size: 13px; padding: 8px 0; }
+
+/* 文件上传 */
+.upload { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
+.upload input[type=file] { display: none; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #2a4bc4; border: 1px solid #3a5fdd; color: #fff;
+  border-radius: 8px; padding: 7px 16px; font-size: 13px; cursor: pointer;
+  transition: all .15s; font-family: inherit; text-decoration: none;
+}
+.btn:hover { background: #3a62e0; }
+.btn.ghost { background: rgba(120,160,255,.08); border-color: rgba(120,160,255,.35); }
+.btn.danger { background: rgba(220,80,80,.15); border-color: rgba(235,110,110,.5); color: #ffa3a3; }
+.btn.danger:hover { background: rgba(220,80,80,.3); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* 周期 */
+.period { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.period input {
+  width: 90px; background: #0e1838; border: 1px solid rgba(120,160,255,.3);
+  color: #dbe4ff; border-radius: 8px; padding: 7px 10px; font-size: 14px; outline: none;
+  font-family: inherit;
+}
+.period input:focus { border-color: #5a8cff; }
+.period-hint { color: #7288b8; font-size: 12px; width: 100%; margin-top: 4px; }
+.state {
+  display: inline-flex; align-items: center; gap: 7px; font-size: 13px;
+  padding: 6px 12px; border-radius: 20px; background: rgba(120,160,255,.08);
+  border: 1px solid rgba(120,160,255,.25);
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #6b7fae; }
+.state.on .dot { background: #4ed98e; box-shadow: 0 0 8px rgba(78,217,142,.8); }
+
+/* Toast */
+#toast {
+  position: fixed; left: 50%; bottom: 34px; transform: translateX(-50%) translateY(20px);
+  background: rgba(16,26,60,.95); border: 1px solid rgba(120,160,255,.4); color: #dbe4ff;
+  padding: 10px 20px; border-radius: 10px; font-size: 13px; opacity: 0; pointer-events: none;
+  transition: all .25s; z-index: 99; max-width: 86vw; text-align: center;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#toast.err { border-color: rgba(235,110,110,.6); color: #ffc9c9; }
+.mini { color: #a9bde6; font-size: 13px; }
+.tip-link { color: #ffd27a; }
+.loading { text-align: center; color: #7288b8; padding: 30px 0; font-size: 14px; }
+
+@media (max-width: 700px) {
+  body { padding: 18px 12px 60px; }
+  .grid { grid-template-columns: repeat(3, 1fr); }
+  .seg button { padding: 8px 14px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>卫星壁纸设置</h1>
+  <div class="sub">风云四号实时云图 · 本地设置面板</div>
+
+  <!-- 地球尺寸 -->
+  <div class="card">
+    <h2>地球尺寸</h2>
+    <div class="row">
+      <div class="seg" id="earthSeg">
+        <button data-earth="1">大</button>
+        <button data-earth="2">中</button>
+        <button data-earth="3">小</button>
+      </div>
+      <span class="mini" id="earthHint">相对屏幕短边计算</span>
+    </div>
+  </div>
+
+  <!-- 背景图 -->
+  <div class="card">
+    <h2>背景图</h2>
+    <div class="grid" id="bgGrid"><div class="loading">加载中…</div></div>
+    <div class="upload">
+      <label class="btn ghost" for="bgFile">＋ 上传新背景</label>
+      <input type="file" id="bgFile" accept="image/jpeg,image/png,image/webp">
+    </div>
+  </div>
+
+  <!-- 更新周期 -->
+  <div class="card">
+    <h2>自动更新周期</h2>
+    <div class="period">
+      <span class="mini">每</span>
+      <input type="number" id="periodInput" min="5" max="720" value="30">
+      <span class="mini">分钟</span>
+      <button class="btn ghost" id="taskOn">启用计划任务</button>
+      <button class="btn danger" id="taskOff">停用</button>
+      <span class="state" id="taskState"><span class="dot"></span><span id="taskStateText">检测中…</span></span>
+    </div>
+    <div class="period-hint">通过 Windows 计划任务定时刷新壁纸，可设 5 ~ 720 分钟（关闭设置窗口不会影响已启用的计划任务）。</div>
+  </div>
+
+  <div class="row" style="justify-content: center; gap: 14px;">
+    <button class="btn" id="btnSave">保存并立即刷新</button>
+    <button class="btn ghost" id="btnRefresh">仅刷新一次</button>
+    <button class="btn ghost" id="btnOpenCache">查看最新云图</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+var esc = function (s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+
+var state = { earth: '1', bg: '', backgrounds: [], taskExists: false, periodMin: null };
+
+var $ = function (id) { return document.getElementById(id); };
+
+function toast(text, isErr) {
+  var t = $('toast');
+  t.textContent = text;
+  t.className = 'show' + (isErr ? ' err' : '');
+  clearTimeout(t._h);
+  t._h = setTimeout(function(){ t.className = ''; }, 2600);
+}
+
+function api(path, body) {
+  return fetch(path, {
+    method: body ? 'POST' : 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined
+  }).then(function (r) { return r.json(); });
+}
+
+/* ---------- 加载状态 ---------- */
+function renderEarth() {
+  var btns = $('earthSeg').querySelectorAll('button');
+  btns.forEach(function (b) { b.classList.toggle('on', b.dataset.earth === state.earth); });
+}
+
+function bgThumb(path, name) {
+  var div = document.createElement('div');
+  div.className = 'bg-item';
+  div.title = name;
+  var img = document.createElement('img');
+  img.alt = name;
+  img.onerror = function () {
+    img.style.display = 'none';
+    var f = document.createElement('div');
+    f.className = 'fail';
+    f.textContent = '预览不可用';
+    div.appendChild(f);
+  };
+  img.src = 'api/bg?path=' + encodeURIComponent(path);
+  div.appendChild(img);
+  var nm = document.createElement('div');
+  nm.className = 'name';
+  nm.textContent = name;
+  div.appendChild(nm);
+  div.addEventListener('click', function () {
+    state.bg = path;
+    renderBgs();
+  });
+  return div;
+}
+
+function renderBgs() {
+  var g = $('bgGrid');
+  g.innerHTML = '';
+  if (!state.backgrounds.length) {
+    g.innerHTML = '<div class="empty">background/ 目录下暂无背景图，请上传一张。</div>';
+    return;
+  }
+  state.backgrounds.forEach(function (p) {
+    var name = String(p).split(/[\\\/]/).pop();
+    var div = bgThumb(p, name);
+    var sel = state.bg && String(p).toLowerCase() === String(state.bg).toLowerCase();
+    if (sel) div.classList.add('on', 'sel');
+    if (sel) {
+      var tk = document.createElement('div');
+      tk.className = 'tick';
+      tk.textContent = '✓';
+      div.appendChild(tk);
+    }
+    g.appendChild(div);
+  });
+}
+
+function renderTask() {
+  var st = $('taskState');
+  if (state.taskExists) {
+    st.classList.add('on');
+    $('taskStateText').textContent = '已启用 · 每 ' + (state.periodMin || '?') + ' 分钟';
+    if (state.periodMin) $('periodInput').value = state.periodMin;
+  } else {
+    st.classList.remove('on');
+    $('taskStateText').textContent = '未启用自动更新';
+  }
+}
+
+function load() {
+  api('api/status').then(function (d) {
+    if (!d.ok) throw new Error(d.error || '加载失败');
+    state.earth = d.earth || '1';
+    state.bg = d.bg || '';
+    state.backgrounds = d.backgrounds || [];
+    state.taskExists = !!d.taskExists;
+    state.periodMin = d.periodMin;
+    renderEarth(); renderBgs(); renderTask();
+  })['catch'](function (e) {
+    $('bgGrid').innerHTML = '<div class="empty">无法连接本地服务（' + esc(e.message) + '）</div>';
+    toast('加载状态失败', true);
+  });
+}
+
+/* ---------- 操作 ---------- */
+function doSave() {
+  var payload = { earth: state.earth, bg: state.bg || (state.backgrounds[0] || '') };
+  var btn = $('btnSave');
+  btn.disabled = true; btn.textContent = '保存中…';
+  api('api/save', payload).then(function (d) {
+    toast(d.ok ? (d.msg || '已保存') : (d.msg || d.error || '保存失败'), !d.ok);
+    if (d.ok) load();
+  }).finally(function () {
+    btn.disabled = false; btn.textContent = '保存并立即刷新';
+  });
+}
+
+function doRefresh() {
+  toast('正在后台刷新壁纸…');
+  api('api/refresh').then(function (d) {
+    toast(d.ok ? (d.msg || '已开始刷新') : (d.msg || d.error || '失败'), !d.ok);
+  });
+}
+
+function doTaskOn() {
+  var m = parseInt($('periodInput').value, 10);
+  if (isNaN(m) || m < 5 || m > 720) { toast('周期需在 5 ~ 720 分钟之间', true); return; }
+  api('api/task', { minutes: m }).then(function (d) {
+    toast(d.ok ? (d.msg || '已启用') : (d.msg || '启用失败'), !d.ok);
+    if (d.ok) load();
+  });
+}
+
+function doTaskOff() {
+  api('api/task_remove').then(function (d) {
+    toast(d.ok ? (d.msg || '已停用') : (d.msg || '停用失败'), !d.ok);
+    if (d.ok) load();
+  });
+}
+
+function doUpload(file) {
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function () {
+    toast('正在上传…');
+    api('api/upload', { name: file.name, data: reader.result }).then(function (d) {
+      if (d.ok) { toast(d.msg || '已上传并应用'); load(); }
+      else toast(d.error || '上传失败', true);
+    });
+  };
+  reader.onerror = function () { toast('读取文件失败', true); };
+  reader.readAsDataURL(file);
+}
+function openCache() {
+  api('api/status').then(function (d) {
+    if (d.finalOk) {
+      window.open('api/preview', '_blank');
+    } else {
+      toast('还没有生成过壁纸，请先保存或刷新一次', true);
+    }
+  });
+}
+
+/* ---------- 事件绑定 ---------- */
+$('earthSeg').addEventListener('click', function (e) {
+  var b = e.target.closest('button');
+  if (!b) return;
+  state.earth = b.dataset.earth;
+  renderEarth();
+});
+$('btnSave').addEventListener('click', doSave);
+$('btnRefresh').addEventListener('click', doRefresh);
+$('taskOn').addEventListener('click', doTaskOn);
+$('taskOff').addEventListener('click', doTaskOff);
+$('bgFile').addEventListener('change', function () {
+  doUpload(this.files[0]);
+  this.value = '';
+});
+$('btnOpenCache').addEventListener('click', openCache);
+
+load();
+</script>
+</body>
+</html>
